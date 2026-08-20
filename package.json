@@ -24,7 +24,7 @@
   },
   "scripts": {
     "lint": "node scripts/lint.mjs",
-    "test": "node --test",
+    "test": "node --test tests/cli.test.mjs tests/event.test.mjs tests/markdown.test.mjs tests/policy.test.mjs tests/reporters.test.mjs",
     "smoke": "node bin/maintainer-contracts.mjs check --event examples/event.json --files examples/files.json --commits examples/commits.json --config examples/maintainer-contracts.config.json --format console",
     "pack:check": "npm pack --dry-run --ignore-scripts",
     "pack:test": "node scripts/test-packed-package.mjs",
