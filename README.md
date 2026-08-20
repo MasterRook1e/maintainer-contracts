@@ -1,5 +1,9 @@
 # Maintainer Contracts
 
+[![CI](https://github.com/MasterRook1e/maintainer-contracts/actions/workflows/ci.yml/badge.svg)](https://github.com/MasterRook1e/maintainer-contracts/actions/workflows/ci.yml)
+[![Action smoke test](https://github.com/MasterRook1e/maintainer-contracts/actions/workflows/example.yml/badge.svg)](https://github.com/MasterRook1e/maintainer-contracts/actions/workflows/example.yml)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
+
 A dependency-free policy-as-code engine for pull-request descriptions, changed paths, labels, checklists, commit subjects, and review-size thresholds.
 
 It is built for maintainers who want review evidence to scale with the risk of a change. A documentation-only pull request should not need the same contract as authentication, schema, release, or public API changes.
@@ -68,7 +72,7 @@ jobs:
           config: maintainer-contracts.config.json
 ```
 
-`fetch-depth: 0` is required when the action must inspect changed files and commit subjects from the base/head range.
+`fetch-depth: 0` is required when the action must inspect changed files and commit subjects from the base/head range. The `v0` ref is the moving compatible major-version branch; security-sensitive consumers may pin an immutable commit SHA.
 
 ## Path-aware policy example
 
@@ -147,9 +151,15 @@ The default configuration does not require AI disclosure. The generated example 
 
 The CLI parses Markdown/JSON and invokes `git` with argument arrays. It does not execute repository source, evaluate JavaScript configuration, call the GitHub API, or send event data over the network.
 
+## Public dogfooding and adoption evidence
+
+The action is exercised against deterministic fixtures and against real pull-request events in public repositories. Current integrations are recorded in [docs/ADOPTION.md](docs/ADOPTION.md).
+
+All currently recorded integrations are maintained by the same GitHub owner. They demonstrate public dogfooding and cross-repository use, not independent external adoption. No npm download count or third-party user count is claimed before verifiable evidence exists.
+
 ## Status
 
-`0.1.0` is an initial public-ready implementation with tests, a JSON Schema, composite GitHub Action, path-aware rules, local Git evidence, and a three-platform Node.js CI matrix. It has not yet been published to npm.
+`0.1.0` is an initial public-ready implementation with tests, a JSON Schema, composite GitHub Action, path-aware rules, local Git evidence, packed-tarball consumer validation, and a three-platform Node.js CI matrix. It has not yet been published to npm.
 
 ## License
 

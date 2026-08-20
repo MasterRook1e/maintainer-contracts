@@ -1,0 +1,93 @@
+{
+  "$schema": "./schemas/config.schema.json",
+  "version": 1,
+  "title": {
+    "pattern": "^(?:feat|fix|docs|test|refactor|perf|build|ci|chore)(?:\\([^)]+\\))?!?: .+",
+    "maxLength": 100,
+    "severity": "warning"
+  },
+  "requiredSections": [
+    {
+      "heading": "Summary",
+      "minChars": 40,
+      "severity": "error"
+    },
+    {
+      "heading": "Compatibility",
+      "minChars": 20,
+      "severity": "error"
+    },
+    {
+      "heading": "Validation",
+      "minChars": 20,
+      "severity": "error"
+    },
+    {
+      "heading": "Security impact",
+      "minChars": 20,
+      "severity": "error"
+    },
+    {
+      "heading": "AI assistance",
+      "minChars": 10,
+      "severity": "warning"
+    }
+  ],
+  "checkboxes": [
+    {
+      "section": "Validation",
+      "minChecked": 1,
+      "severity": "error"
+    }
+  ],
+  "pathRules": [
+    {
+      "name": "public-policy-surface-change",
+      "paths": [
+        "action.yml",
+        "bin/**",
+        "schemas/**",
+        "src/**"
+      ],
+      "requireCheckedTexts": [
+        "parser/policy tests added or updated",
+        "deterministic finding IDs and ordering preserved"
+      ],
+      "severity": "error"
+    },
+    {
+      "name": "ci-or-input-boundary-change",
+      "paths": [
+        ".github/workflows/**",
+        "action.yml",
+        "src/cli.mjs",
+        "src/event.mjs"
+      ],
+      "requireCheckedTexts": [
+        "no private events, credentials, or repository source included"
+      ],
+      "severity": "error"
+    }
+  ],
+  "sizeRules": {
+    "maxFiles": {
+      "limit": 60,
+      "severity": "warning"
+    },
+    "maxAdditions": {
+      "limit": 3000,
+      "severity": "warning"
+    },
+    "maxDeletions": {
+      "limit": 3000,
+      "severity": "warning"
+    }
+  },
+  "aiDisclosure": {
+    "section": "AI assistance",
+    "required": true,
+    "minChars": 10,
+    "severity": "warning"
+  },
+  "failLevel": "error"
+}
