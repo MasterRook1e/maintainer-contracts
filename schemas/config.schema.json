@@ -1,0 +1,27 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://raw.githubusercontent.com/MasterRook1e/maintainer-contracts/main/schemas/config.schema.json",
+  "title": "Maintainer Contracts configuration",
+  "type": "object",
+  "required": ["version"],
+  "properties": {
+    "version": { "const": 1 },
+    "failLevel": { "enum": ["note", "warning", "error", "off"] },
+    "skipDrafts": { "type": "boolean" },
+    "requiredSections": { "type": "array", "items": { "$ref": "#/$defs/section" } },
+    "pathRules": { "type": "array", "items": { "type": "object", "required": ["name", "paths"] } },
+    "commitRules": { "type": "object" }
+  },
+  "$defs": {
+    "section": {
+      "type": "object",
+      "required": ["heading"],
+      "properties": {
+        "heading": { "type": "string" },
+        "minChars": { "type": "number", "minimum": 0 },
+        "severity": { "enum": ["note", "warning", "error"] }
+      }
+    }
+  },
+  "additionalProperties": true
+}

@@ -1,0 +1,52 @@
+{
+  "name": "maintainer-contracts",
+  "version": "0.1.0",
+  "description": "Dependency-free, path-aware pull-request policy contracts for maintainers and AI-assisted repositories.",
+  "type": "module",
+  "bin": {
+    "maintainer-contracts": "bin/maintainer-contracts.mjs"
+  },
+  "exports": {
+    ".": "./src/index.mjs",
+    "./config-schema": "./schemas/config.schema.json"
+  },
+  "files": [
+    "action.yml",
+    "bin",
+    "schemas",
+    "src",
+    "README.md",
+    "LICENSE",
+    "SECURITY.md"
+  ],
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "lint": "node scripts/lint.mjs",
+    "test": "node --test tests/*.test.mjs",
+    "smoke": "node bin/maintainer-contracts.mjs check --event examples/event.json --files examples/files.json --commits examples/commits.json --config examples/maintainer-contracts.config.json --format console",
+    "pack:check": "npm pack --dry-run --ignore-scripts",
+    "verify": "npm run lint && npm test && npm run smoke && npm run pack:check"
+  },
+  "keywords": [
+    "github-actions",
+    "pull-request",
+    "policy-as-code",
+    "maintainer",
+    "code-review",
+    "ai-assisted-development",
+    "governance",
+    "ci"
+  ],
+  "author": "MasterRook1e",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/MasterRook1e/maintainer-contracts.git"
+  },
+  "bugs": {
+    "url": "https://github.com/MasterRook1e/maintainer-contracts/issues"
+  },
+  "homepage": "https://github.com/MasterRook1e/maintainer-contracts#readme"
+}
