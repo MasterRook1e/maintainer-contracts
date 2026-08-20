@@ -1,10 +1,15 @@
 # Changelog
 
-## Unreleased
+## 0.1.1
 
-- Added a clean packed-tarball consumer test that validates the npm file allowlist,
-  installs the generated package into a temporary repository, runs the installed CLI, and
-  imports the installed library API on every supported CI platform.
+- added authenticated GitHub API evidence acquisition for pull-request files and commits
+- added bounded pagination, request timeouts, and fail-closed changed-file completeness checks
+- kept tokens out of command-line arguments, reports, and API error bodies
+- added public library export and focused API, pagination, token-safety, and completeness tests
+- removed an unreachable duplicate evaluator and its omitted failing test
+- removed duplicate issue forms, a temporary upload probe, and a broken redundant workflow
+- documented trusted-base checkout and fork-safe action integration
+- retained clean packed-tarball consumer verification on every supported CI platform
 
 ## 0.1.0
 

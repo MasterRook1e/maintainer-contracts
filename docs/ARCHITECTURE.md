@@ -2,14 +2,25 @@
 
 Maintainer Contracts uses four explicit layers.
 
-1. **Evidence acquisition** normalizes a GitHub pull-request event and, when requested, obtains changed paths, additions/deletions, and commit subjects from a local Git range.
+1. **Evidence acquisition** normalizes a GitHub pull-request event and obtains changed paths, additions/deletions, and commit subjects from one of three interchangeable sources:
+   - the authenticated GitHub API,
+   - a local Git base/head range,
+   - explicit deterministic JSON fixtures.
 2. **Markdown parsing** creates section and checklist evidence while ignoring fenced code and HTML comments.
 3. **Policy evaluation** applies global rules, path rules, label rules, commit rules, and review-size thresholds.
 4. **Reporting** emits deterministic console, JSON, Markdown, and GitHub workflow annotations.
 
-## Why local Git instead of GitHub API calls?
+## Evidence-source boundary
 
-The action already has a checked-out repository. Local Git avoids additional API permissions, token handling, pagination, rate limits, and fork-specific authentication behavior. It also keeps the core CLI useful in other CI systems.
+Evidence acquisition is deliberately separate from policy evaluation. The evaluator receives one normalized structure regardless of where the evidence originated. This keeps policy behavior deterministic and makes the networked boundary independently testable.
+
+GitHub API mode follows paginated `files` and `commits` endpoints, enforces a page ceiling, applies a request timeout, and checks the fetched file count against the pull-request event. A disagreement is treated as an input failure rather than silently evaluating incomplete evidence.
+
+Local Git mode invokes `git` with argument arrays and never uses a shell. Fixture mode reads JSON only. Neither mode performs network requests.
+
+## Trusted policy, untrusted change
+
+The recommended GitHub workflow checks out the pull request's base SHA. Repository policy is therefore controlled by maintainers rather than by the pull-request branch. The action reads change metadata through the read-only GitHub API and does not execute source from the proposed change.
 
 ## Rule activation
 

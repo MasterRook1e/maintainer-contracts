@@ -4,7 +4,7 @@ import fs from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
 import { spawnSync } from "node:child_process";
-import { inspectGitRange, normalizePullRequestEvent } from "../src/event.mjs";
+import { inspectGitRange, loadInputs, normalizePullRequestEvent } from "../src/event.mjs";
 
 test("GitHub event normalization extracts PR fields", () => {
   const pr = normalizePullRequestEvent({
@@ -41,6 +41,77 @@ test("git inspection returns changed files and commit subjects", async () => {
     const inspected = await inspectGitRange({ gitRoot: root, baseSha: base });
     assert.equal(inspected.files[0].path, "a.txt");
     assert.equal(inspected.commits[0].message, "feat: update a");
+  } finally {
+    await fs.rm(root, { recursive: true, force: true });
+  }
+});
+
+test("loadInputs uses complete GitHub API evidence and records its source", async () => {
+  const root = await fs.mkdtemp(path.join(os.tmpdir(), "contracts-api-"));
+  try {
+    const eventPath = path.join(root, "event.json");
+    await fs.writeFile(eventPath, JSON.stringify({
+      number: 9,
+      pull_request: {
+        title: "feat: API evidence",
+        body: "body",
+        changed_files: 1,
+        additions: 4,
+        deletions: 1
+      }
+    }));
+    const fetchImpl = async (url) => ({
+      ok: true,
+      status: 200,
+      statusText: "OK",
+      headers: { get: () => null },
+      async json() {
+        return url.includes("/files")
+          ? [{ filename: "src/api.mjs", additions: 4, deletions: 1 }]
+          : [{ sha: "abc", commit: { message: "feat: API evidence" } }];
+      }
+    });
+    const input = await loadInputs({
+      event: eventPath,
+      githubApi: true,
+      githubRepository: "owner/repo",
+      githubToken: "token",
+      fetchImpl
+    });
+    assert.equal(input.evidenceSource, "github-api");
+    assert.equal(input.files[0].path, "src/api.mjs");
+    assert.equal(input.commits[0].message, "feat: API evidence");
+  } finally {
+    await fs.rm(root, { recursive: true, force: true });
+  }
+});
+
+test("loadInputs rejects an incomplete GitHub file list", async () => {
+  const root = await fs.mkdtemp(path.join(os.tmpdir(), "contracts-api-"));
+  try {
+    const eventPath = path.join(root, "event.json");
+    await fs.writeFile(eventPath, JSON.stringify({
+      number: 9,
+      pull_request: { changed_files: 2 }
+    }));
+    const fetchImpl = async (url) => ({
+      ok: true,
+      status: 200,
+      statusText: "OK",
+      headers: { get: () => null },
+      async json() {
+        return url.includes("/files")
+          ? [{ filename: "one.mjs", additions: 1, deletions: 0 }]
+          : [{ sha: "abc", commit: { message: "test: one" } }];
+      }
+    });
+    await assert.rejects(loadInputs({
+      event: eventPath,
+      githubApi: true,
+      githubRepository: "owner/repo",
+      githubToken: "token",
+      fetchImpl
+    }), /refusing incomplete evidence/);
   } finally {
     await fs.rm(root, { recursive: true, force: true });
   }

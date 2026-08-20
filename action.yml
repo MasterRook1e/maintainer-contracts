@@ -21,8 +21,16 @@ inputs:
     description: Optional JSON path containing commit evidence.
     required: false
     default: ""
+  github-api:
+    description: Fetch complete pull-request files and commits through the GitHub API.
+    required: false
+    default: "true"
+  token:
+    description: Read-only GitHub token, normally ${{ github.token }} from the caller.
+    required: false
+    default: ""
   git-root:
-    description: Local Git worktree used when file or commit evidence is not supplied.
+    description: Local Git worktree fallback when github-api is false.
     required: false
     default: "."
   report-dir:
@@ -54,6 +62,10 @@ runs:
         MC_EVENT: ${{ inputs.event }}
         MC_FILES: ${{ inputs.files }}
         MC_COMMITS: ${{ inputs.commits }}
+        MC_USE_GITHUB_API: ${{ inputs.github-api }}
+        MC_GITHUB_TOKEN: ${{ inputs.token }}
+        MC_GITHUB_REPOSITORY: ${{ github.repository }}
+        MC_GITHUB_API_URL: ${{ github.api_url }}
         MC_GIT_ROOT: ${{ inputs.git-root }}
         MC_REPORT_DIR: ${{ inputs.report-dir }}
         MC_GITHUB_ANNOTATIONS: ${{ inputs.github-annotations }}
@@ -76,10 +88,17 @@ runs:
         if [[ -n "$MC_COMMITS" ]]; then
           args+=(--commits "$MC_COMMITS")
         fi
-        if [[ -n "$MC_GIT_ROOT" ]]; then
+        if [[ "$MC_USE_GITHUB_API" == "true" && -z "$MC_FILES" && -z "$MC_COMMITS" ]]; then
+          args+=(
+            --github-api
+            --github-repository "$MC_GITHUB_REPOSITORY"
+            --github-api-url "$MC_GITHUB_API_URL"
+          )
+        elif [[ -n "$MC_GIT_ROOT" ]]; then
           args+=(--git-root "$MC_GIT_ROOT")
         fi
         if [[ "$MC_GITHUB_ANNOTATIONS" == "true" ]]; then
           args+=(--github-annotations)
         fi
-        node "$GITHUB_ACTION_PATH/bin/maintainer-contracts.mjs" "${args[@]}"
+        GITHUB_TOKEN="$MC_GITHUB_TOKEN" \
+          node "$GITHUB_ACTION_PATH/bin/maintainer-contracts.mjs" "${args[@]}"

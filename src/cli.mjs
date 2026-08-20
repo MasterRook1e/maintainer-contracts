@@ -17,7 +17,12 @@ Inputs:
   --event <path>                GitHub pull_request event JSON
   --files <path>                JSON array of changed file records or paths
   --commits <path>              JSON array of commit records or subjects
-  --git-root <path>             Inspect base...head with local git when event has SHAs
+  --github-api                  Fetch complete PR file/commit evidence with GITHUB_TOKEN
+  --github-repository <owner/name>
+  --github-api-url <url>        Defaults to GITHUB_API_URL or api.github.com
+  --github-max-pages <number>   Fail closed after this many pages (default: 30)
+  --github-timeout-ms <number>  Per-request timeout (default: 15000)
+  --git-root <path>             Inspect base...head with local git when API mode is off
   --config <path>               Policy config relative to project root
   --project-root <path>         Repository root (default: cwd)
 
@@ -31,14 +36,30 @@ Output:
   --version
   --help
 
+GITHUB_TOKEN is read from the environment and is never accepted as a CLI argument.
 Exit codes: 0 pass, 1 policy failure, 2 input/configuration/runtime error.
 `;
 
 function parseArgs(argv) {
-  const options = { command: "check", format: "console", projectRoot: process.cwd(), quiet: false, force: false, githubAnnotations: false };
+  const options = {
+    command: "check",
+    format: "console",
+    projectRoot: process.cwd(),
+    quiet: false,
+    force: false,
+    githubAnnotations: false,
+    githubApi: false
+  };
   const args = [...argv];
   if (args[0] && !args[0].startsWith("-")) options.command = args.shift();
-  const booleans = new Set(["--quiet", "--force", "--github-annotations", "--help", "--version"]);
+  const booleans = new Set([
+    "--quiet",
+    "--force",
+    "--github-api",
+    "--github-annotations",
+    "--help",
+    "--version"
+  ]);
   while (args.length) {
     const key = args.shift();
     if (booleans.has(key)) {
@@ -83,8 +104,17 @@ export async function runCli(argv) {
   if (options.command === "init") return initProject(options);
   if (options.command !== "check") throw new Error(`unknown command: ${options.command}`);
   const loaded = await loadConfig({ projectRoot: options.projectRoot, configPath: options.config });
-  const input = await loadInputs({ ...options, gitRoot: options.gitRoot ? path.resolve(loaded.projectRoot, options.gitRoot) : null });
+  const input = await loadInputs({
+    ...options,
+    gitRoot: options.gitRoot ? path.resolve(loaded.projectRoot, options.gitRoot) : null,
+    githubRepository: options.githubRepository || process.env.GITHUB_REPOSITORY,
+    githubApiUrl: options.githubApiUrl || process.env.GITHUB_API_URL,
+    githubToken: process.env.GITHUB_TOKEN,
+    githubMaxPages: options.githubMaxPages,
+    githubTimeoutMs: options.githubTimeoutMs
+  });
   const result = evaluateContracts(input, loaded.config);
+  result.evidence = { source: input.evidenceSource };
   const rendered = renderReport(result, options.format);
   if (options.out) await writeTextAtomic(path.resolve(loaded.projectRoot, options.out), rendered);
   if (options.reportDir) {

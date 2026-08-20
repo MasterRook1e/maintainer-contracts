@@ -11,19 +11,19 @@ It is built for maintainers who want review evidence to scale with the risk of a
 ## Core idea
 
 ```text
-pull_request event + local Git range + declarative policy
-                         |
-                         v
-             normalized review evidence
-                         |
-         +---------------+---------------+
-         |               |               |
-     PR sections     path rules      commit rules
-         |               |               |
-         +---------------+---------------+
-                         |
-                         v
-          console / JSON / Markdown / annotations
+pull_request event + GitHub API / local Git / explicit fixtures
+                              |
+                              v
+                  normalized review evidence
+                              |
+              +---------------+---------------+
+              |               |               |
+          PR sections     path rules      commit rules
+              |               |               |
+              +---------------+---------------+
+                              |
+                              v
+               console / JSON / Markdown / annotations
 ```
 
 ## Features
@@ -37,42 +37,48 @@ pull_request event + local Git range + declarative policy
 - independent label rules
 - commit-subject contracts
 - PR title and review-size thresholds
-- GitHub pull-request event normalization
+- complete GitHub pull-request file and commit pagination
+- fail-closed evidence-count validation
 - local `git diff --numstat` and commit-range inspection
+- deterministic fixtures for offline and cross-CI use
 - GitHub workflow annotations and action outputs
 - deterministic JSON and Markdown reports
-- no runtime dependencies and no network calls
+- no runtime package dependencies
 
-## Quick start
+## Secure GitHub Action setup
 
-```bash
-npm install --save-dev maintainer-contracts
-npx maintainer-contracts init
-```
-
-Add a pull-request workflow:
+Use the ordinary `pull_request` event, read-only permissions, and policy from the trusted base revision:
 
 ```yaml
 name: Pull request contracts
+
 on:
   pull_request:
     types: [opened, edited, synchronize, reopened, labeled, unlabeled]
+
 permissions:
   contents: read
   pull-requests: read
+
 jobs:
   contracts:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - name: Check out trusted base policy
+        uses: actions/checkout@v4
         with:
-          fetch-depth: 0
-      - uses: MasterRook1e/maintainer-contracts@v0
+          ref: ${{ github.event.pull_request.base.sha }}
+
+      - name: Evaluate review contract
+        uses: MasterRook1e/maintainer-contracts@v0
         with:
           config: maintainer-contracts.config.json
+          token: ${{ github.token }}
 ```
 
-`fetch-depth: 0` is required when the action must inspect changed files and commit subjects from the base/head range. The `v0` ref is the moving compatible major-version branch; security-sensitive consumers may pin an immutable commit SHA.
+The action obtains changed-file statistics and commit subjects from the GitHub API. It never executes source from the pull-request branch. The `v0` branch tracks compatible 0.x action releases; security-sensitive consumers may pin an immutable commit SHA.
+
+See [docs/GITHUB_INTEGRATION.md](docs/GITHUB_INTEGRATION.md) for the threat boundary and fork-safe setup.
 
 ## Path-aware policy example
 
@@ -111,6 +117,15 @@ Only matching paths trigger these additional requirements.
 
 ## Local use
 
+Install and generate an example policy:
+
+```bash
+npm install --save-dev maintainer-contracts
+npx maintainer-contracts init
+```
+
+Inspect a local base/head range:
+
 ```bash
 maintainer-contracts check \
   --event event.json \
@@ -118,7 +133,17 @@ maintainer-contracts check \
   --config maintainer-contracts.config.json
 ```
 
-For deterministic offline tests, supply changed files and commits explicitly:
+Fetch complete evidence directly from GitHub without placing the token on the command line:
+
+```bash
+GITHUB_TOKEN=... maintainer-contracts check \
+  --event event.json \
+  --github-api \
+  --github-repository owner/repository \
+  --config maintainer-contracts.config.json
+```
+
+For deterministic offline tests, supply files and commits explicitly:
 
 ```bash
 maintainer-contracts check \
@@ -129,10 +154,23 @@ maintainer-contracts check \
   --format json
 ```
 
+## Evidence guarantees
+
+GitHub API mode:
+
+- follows pagination for files and commits
+- fails closed when the configured page ceiling is exceeded
+- compares the fetched file count with `pull_request.changed_files`
+- uses a per-request timeout
+- keeps the token in the Authorization header only
+- omits response bodies from API errors to avoid accidental secret reflection
+
+Local Git and explicit-fixture modes remain network-free.
+
 ## Reports and outputs
 
 ```bash
-maintainer-contracts check --event "$GITHUB_EVENT_PATH" --git-root . --report-dir .maintainer-contracts
+maintainer-contracts check --event "$GITHUB_EVENT_PATH" --github-api --report-dir .maintainer-contracts
 ```
 
 This writes `report.json` and `report.md`. In GitHub Actions, the action also exposes:
@@ -147,19 +185,15 @@ The tool does not decide whether AI use is good or bad. It lets a repository req
 
 The default configuration does not require AI disclosure. The generated example does, because maintainers should choose that policy deliberately.
 
-## Security model
-
-The CLI parses Markdown/JSON and invokes `git` with argument arrays. It does not execute repository source, evaluate JavaScript configuration, call the GitHub API, or send event data over the network.
-
 ## Public dogfooding and adoption evidence
 
-The action is exercised against deterministic fixtures and against real pull-request events in public repositories. Current integrations are recorded in [docs/ADOPTION.md](docs/ADOPTION.md).
+The action is exercised against deterministic fixtures and real pull-request events in public repositories. Current integrations are recorded in [docs/ADOPTION.md](docs/ADOPTION.md).
 
 All currently recorded integrations are maintained by the same GitHub owner. They demonstrate public dogfooding and cross-repository use, not independent external adoption. No npm download count or third-party user count is claimed before verifiable evidence exists.
 
 ## Status
 
-`0.1.0` is an initial public-ready implementation with tests, a JSON Schema, composite GitHub Action, path-aware rules, local Git evidence, packed-tarball consumer validation, and a three-platform Node.js CI matrix. It has not yet been published to npm.
+`0.1.1` adds authenticated, paginated GitHub evidence acquisition, fail-closed completeness checks, token-safe errors, and expanded tests. The package has not yet been published to npm.
 
 ## License
 

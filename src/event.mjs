@@ -1,6 +1,7 @@
 import fs from "node:fs/promises";
 import path from "node:path";
 import { spawn } from "node:child_process";
+import { fetchPullRequestEvidence } from "./github.mjs";
 import { normalizeRelative } from "./util.mjs";
 
 function run(command, args, options = {}) {
@@ -70,22 +71,67 @@ export async function inspectGitRange({ gitRoot, baseSha, headSha = "HEAD" }) {
   return { files, commits };
 }
 
+function normalizeFiles(files) {
+  return (files || []).map((file) => typeof file === "string"
+    ? { path: normalizeRelative(file), additions: 0, deletions: 0, binary: false }
+    : {
+        path: normalizeRelative(file.path || file.filename),
+        additions: Number(file.additions || 0),
+        deletions: Number(file.deletions || 0),
+        binary: Boolean(file.binary)
+      });
+}
+
+function normalizeCommits(commits) {
+  return (commits || []).map((commit) => typeof commit === "string"
+    ? { sha: "", message: commit }
+    : { sha: String(commit.sha || ""), message: String(commit.message || commit.subject || "") });
+}
+
 export async function loadInputs(options) {
   const event = options.event ? await readJsonFile(options.event) : {};
   const pullRequest = normalizePullRequestEvent(event);
   let files = options.files ? await readJsonFile(options.files) : null;
   let commits = options.commits ? await readJsonFile(options.commits) : null;
+  let evidenceSource = files || commits ? "explicit" : "none";
+
+  if ((!files || !commits) && options.githubApi) {
+    const evidence = await fetchPullRequestEvidence({
+      repository: options.githubRepository || process.env.GITHUB_REPOSITORY,
+      pullNumber: pullRequest.number,
+      token: options.githubToken || process.env.GITHUB_TOKEN,
+      apiUrl: options.githubApiUrl || process.env.GITHUB_API_URL || "https://api.github.com",
+      fetchImpl: options.fetchImpl,
+      maxPages: options.githubMaxPages,
+      timeoutMs: options.githubTimeoutMs
+    });
+    files ??= evidence.files;
+    commits ??= evidence.commits;
+    evidenceSource = "github-api";
+  }
+
   if ((!files || !commits) && options.gitRoot && pullRequest.baseSha) {
-    const inspected = await inspectGitRange({ gitRoot: options.gitRoot, baseSha: pullRequest.baseSha, headSha: pullRequest.headSha || "HEAD" });
+    const inspected = await inspectGitRange({
+      gitRoot: options.gitRoot,
+      baseSha: pullRequest.baseSha,
+      headSha: pullRequest.headSha || "HEAD"
+    });
     files ??= inspected.files;
     commits ??= inspected.commits;
+    evidenceSource = evidenceSource === "explicit" ? "explicit+git" : "git";
   }
-  files = (files || []).map((file) => typeof file === "string"
-    ? { path: normalizeRelative(file), additions: 0, deletions: 0, binary: false }
-    : { path: normalizeRelative(file.path || file.filename), additions: Number(file.additions || 0), deletions: Number(file.deletions || 0), binary: Boolean(file.binary) });
-  commits = (commits || []).map((commit) => typeof commit === "string" ? { sha: "", message: commit } : { sha: String(commit.sha || ""), message: String(commit.message || commit.subject || "") });
+
+  files = normalizeFiles(files);
+  commits = normalizeCommits(commits);
+
+  if (options.githubApi && pullRequest.changedFiles > 0 && files.length !== pullRequest.changedFiles) {
+    throw new Error(
+      `GitHub API returned ${files.length} changed files but the pull-request event reports ${pullRequest.changedFiles}; refusing incomplete evidence`,
+    );
+  }
+
   if (!pullRequest.changedFiles) pullRequest.changedFiles = files.length;
   if (!pullRequest.additions) pullRequest.additions = files.reduce((sum, file) => sum + file.additions, 0);
   if (!pullRequest.deletions) pullRequest.deletions = files.reduce((sum, file) => sum + file.deletions, 0);
-  return { pullRequest, files, commits, rawEvent: event };
+  return { pullRequest, files, commits, rawEvent: event, evidenceSource };
 }
