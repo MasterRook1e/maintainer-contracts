@@ -1,47 +1,100 @@
 {
-  "$schema": "../schemas/policy.schema.json",
+  "$schema": "../schemas/config.schema.json",
+  "version": 1,
+  "failLevel": "error",
+  "skipDrafts": false,
+  "title": {
+    "pattern": "^(?:feat|fix|docs|test|refactor|perf|build|ci|chore)(?:\\([^)]+\\))?!?: .+",
+    "maxLength": 100,
+    "severity": "error"
+  },
   "requiredSections": [
-    { "name": "Summary", "minLength": 20 },
-    { "name": "Security impact", "minLength": 4 },
-    { "name": "Testing", "minLength": 10 },
-    { "name": "Compatibility notes", "minLength": 4 },
-    { "name": "Public boundary", "minLength": 10 },
-    { "name": "AI assistance", "minLength": 4 }
+    { "heading": "Summary", "minChars": 40, "severity": "error" },
+    { "heading": "Compatibility", "minChars": 4, "severity": "error" },
+    { "heading": "Validation", "minChars": 10, "severity": "error" },
+    { "heading": "Security impact", "minChars": 4, "severity": "error" },
+    { "heading": "Public boundary", "minChars": 10, "severity": "error" },
+    { "heading": "AI assistance", "minChars": 10, "severity": "error" }
+  ],
+  "checkboxes": [
+    {
+      "section": "Validation",
+      "minChecked": 4,
+      "requiredTexts": [
+        "npm run verify",
+        "npm pack --dry-run",
+        "No credentials"
+      ],
+      "severity": "error"
+    }
   ],
   "forbiddenPlaceholders": [
-    "Describe the maintainer problem",
-    "Explain possible bypasses",
-    "Describe policy-schema",
-    "State the tools used"
-  ],
-  "requiredCheckedItems": ["npm run check", "npm pack --dry-run", "No credentials"],
-  "minimumCheckedItems": 4,
-  "titlePattern": {
-    "pattern": "^(feat|fix|docs|chore|refactor|test|ci)(\\([a-z0-9_.-]+\\))?: .+",
-    "message": "Use a conventional pull-request title."
-  },
-  "commitPattern": {
-    "pattern": "^(feat|fix|docs|chore|refactor|test|ci)(\\([a-z0-9_.-]+\\))?: .+",
-    "message": "Each commit subject must use the repository's conventional format."
-  },
-  "limits": {
-    "filesChanged": 80,
-    "changedLines": 2500
-  },
-  "pathRules": [
     {
-      "id": "runtime-or-public-api",
-      "include": ["src/**", "bin/**", "action.yml", "schemas/**"],
-      "require": {
-        "requiredSections": ["Compatibility notes"]
-      }
+      "name": "summary instruction",
+      "pattern": "Describe the maintainer problem",
+      "flags": "i",
+      "severity": "error",
+      "message": "Replace the summary instruction with reviewable evidence."
     },
     {
-      "id": "workflow-or-token-boundary",
-      "include": ["src/github.mjs", "action.yml", ".github/workflows/**"],
-      "require": {
-        "requiredSections": ["Security impact", "Testing"]
-      }
+      "name": "security instruction",
+      "pattern": "Explain possible bypasses",
+      "flags": "i",
+      "severity": "error",
+      "message": "Replace the security instruction with an explicit impact statement."
+    },
+    {
+      "name": "compatibility instruction",
+      "pattern": "Describe policy-schema",
+      "flags": "i",
+      "severity": "error",
+      "message": "Replace the compatibility instruction with an explicit statement."
+    },
+    {
+      "name": "testing instruction",
+      "pattern": "State the tools used",
+      "flags": "i",
+      "severity": "error",
+      "message": "Replace the testing instruction with actual verification evidence."
     }
-  ]
+  ],
+  "pathRules": [
+    {
+      "name": "runtime-or-public-api",
+      "paths": ["src/**", "bin/**", "action.yml", "schemas/**"],
+      "requireSections": [
+        { "heading": "Compatibility", "minChars": 20, "severity": "error" }
+      ],
+      "requireCheckedTexts": ["parser/policy tests added or updated"],
+      "severity": "error"
+    },
+    {
+      "name": "workflow-or-token-boundary",
+      "paths": ["src/github.mjs", "action.yml", ".github/workflows/**"],
+      "requireSections": [
+        { "heading": "Security impact", "minChars": 20, "severity": "error" },
+        { "heading": "Validation", "minChars": 20, "severity": "error" }
+      ],
+      "requireCheckedTexts": ["No credentials"],
+      "severity": "error"
+    }
+  ],
+  "commitRules": {
+    "enabled": true,
+    "pattern": "^(?:feat|fix|docs|test|refactor|perf|build|ci|chore)(?:\\([^)]+\\))?!?: .+",
+    "maxSubjectLength": 100,
+    "ignoreMerges": true,
+    "severity": "error"
+  },
+  "sizeRules": {
+    "maxFiles": { "limit": 80, "severity": "warning" },
+    "maxAdditions": { "limit": 2500, "severity": "warning" },
+    "maxDeletions": { "limit": 2500, "severity": "warning" }
+  },
+  "aiDisclosure": {
+    "section": "AI assistance",
+    "required": true,
+    "minChars": 10,
+    "severity": "error"
+  }
 }
