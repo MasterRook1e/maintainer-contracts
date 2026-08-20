@@ -1,0 +1,12 @@
+{
+  "number": 42,
+  "pull_request": {
+    "title": "feat(policy): add path-aware contracts",
+    "body": "## Summary\nThis change adds a generic path-aware maintainer policy engine for pull requests.\n\nFixes #17\n\n## Validation\n- [x] Unit tests run\n- [x] Threat model reviewed\n\n## Security impact\nThe parser reads event metadata and local Git history without executing repository source.\n\n## AI assistance\nAI assisted with test design; the generated output was reviewed and executed locally.\n",
+    "draft": false,
+    "user": { "login": "maintainer" },
+    "labels": [{ "name": "security-reviewed" }],
+    "base": { "sha": "base", "ref": "main" },
+    "head": { "sha": "head", "ref": "feature" }
+  }
+}

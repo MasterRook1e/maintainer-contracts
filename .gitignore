@@ -1,6 +1,6 @@
 node_modules/
 coverage/
-*.log
+.maintainer-contracts/
 *.tgz
 .DS_Store
-.tmp/
+Thumbs.db

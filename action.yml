@@ -1,0 +1,85 @@
+name: Maintainer Contracts
+description: Enforce path-aware pull-request and maintainer policies without runtime dependencies.
+author: MasterRook1e
+branding:
+  icon: check-square
+  color: purple
+inputs:
+  config:
+    description: Configuration path relative to the checked-out repository.
+    required: false
+    default: maintainer-contracts.config.json
+  event:
+    description: Optional event JSON path. Defaults to GITHUB_EVENT_PATH.
+    required: false
+    default: ""
+  files:
+    description: Optional JSON path containing changed-file evidence.
+    required: false
+    default: ""
+  commits:
+    description: Optional JSON path containing commit evidence.
+    required: false
+    default: ""
+  git-root:
+    description: Local Git worktree used when file or commit evidence is not supplied.
+    required: false
+    default: "."
+  report-dir:
+    description: Directory for JSON and Markdown reports.
+    required: false
+    default: .maintainer-contracts
+  github-annotations:
+    description: Emit GitHub workflow annotations.
+    required: false
+    default: "true"
+outputs:
+  passed:
+    description: Whether the configured contract passed.
+    value: ${{ steps.contracts.outputs.passed }}
+  errors:
+    description: Error finding count.
+    value: ${{ steps.contracts.outputs.errors }}
+  warnings:
+    description: Warning finding count.
+    value: ${{ steps.contracts.outputs.warnings }}
+runs:
+  using: composite
+  steps:
+    - id: contracts
+      name: Evaluate maintainer contracts
+      shell: bash
+      env:
+        MC_CONFIG: ${{ inputs.config }}
+        MC_EVENT: ${{ inputs.event }}
+        MC_FILES: ${{ inputs.files }}
+        MC_COMMITS: ${{ inputs.commits }}
+        MC_GIT_ROOT: ${{ inputs.git-root }}
+        MC_REPORT_DIR: ${{ inputs.report-dir }}
+        MC_GITHUB_ANNOTATIONS: ${{ inputs.github-annotations }}
+      run: |
+        set -euo pipefail
+        args=(
+          check
+          --project-root "$GITHUB_WORKSPACE"
+          --config "$MC_CONFIG"
+          --report-dir "$MC_REPORT_DIR"
+        )
+        if [[ -n "$MC_EVENT" ]]; then
+          args+=(--event "$MC_EVENT")
+        else
+          args+=(--event "$GITHUB_EVENT_PATH")
+        fi
+        if [[ -n "$MC_FILES" ]]; then
+          args+=(--files "$MC_FILES")
+        fi
+        if [[ -n "$MC_COMMITS" ]]; then
+          args+=(--commits "$MC_COMMITS")
+        fi
+        if [[ -n "$MC_GIT_ROOT" ]]; then
+          args+=(--git-root "$MC_GIT_ROOT")
+        fi
+        if [[ "$MC_GITHUB_ANNOTATIONS" == "true" ]]; then
+          args+=(--github-annotations)
+        fi
+        node "$GITHUB_ACTION_PATH/bin/maintainer-contracts.mjs" "${args[@]}"

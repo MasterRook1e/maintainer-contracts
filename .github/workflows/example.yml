@@ -1,0 +1,32 @@
+name: Action smoke test
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  evaluate-example:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Run checked-out action against deterministic fixtures
+        uses: ./
+        with:
+          config: examples/maintainer-contracts.config.json
+          event: examples/event.json
+          files: examples/files.json
+          commits: examples/commits.json
+          report-dir: .maintainer-contracts
+          github-annotations: "false"
+      - name: Validate generated reports
+        shell: bash
+        run: |
+          test -s .maintainer-contracts/report.json
+          test -s .maintainer-contracts/report.md

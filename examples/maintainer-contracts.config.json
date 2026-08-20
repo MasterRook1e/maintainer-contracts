@@ -1,0 +1,37 @@
+{
+  "$schema": "../schemas/config.schema.json",
+  "version": 1,
+  "title": {
+    "pattern": "^(?:feat|fix|docs|test|refactor|perf|build|ci|chore)(?:\\([^)]+\\))?!?: .+",
+    "maxLength": 100,
+    "severity": "warning"
+  },
+  "requiredSections": [
+    { "heading": "Summary", "minChars": 40, "severity": "error" },
+    { "heading": "Validation", "minChars": 10, "severity": "error" },
+    { "heading": "AI assistance", "minChars": 10, "severity": "warning" }
+  ],
+  "checkboxes": [
+    { "section": "Validation", "minChecked": 1, "severity": "error" }
+  ],
+  "requiredPatterns": [
+    {
+      "name": "linked-issue",
+      "pattern": "(?:Closes|Fixes|Resolves)\\s+#\\d+",
+      "flags": "i",
+      "severity": "warning",
+      "message": "Link a tracked issue with Closes/Fixes/Resolves #number."
+    }
+  ],
+  "pathRules": [
+    {
+      "name": "security-sensitive-change",
+      "paths": ["**/auth/**", "**/security/**"],
+      "requireSections": [{ "heading": "Security impact", "minChars": 30 }],
+      "requireAnyLabels": ["security-reviewed", "security-not-applicable"],
+      "requireCheckedTexts": ["Threat model reviewed"],
+      "severity": "error"
+    }
+  ],
+  "failLevel": "error"
+}
