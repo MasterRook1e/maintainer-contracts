@@ -1,0 +1,39 @@
+name: Bug report
+description: Report a reproducible false pass, false failure, or integration error
+title: "[Bug]: "
+labels: [bug, triage]
+body:
+  - type: markdown
+    attributes:
+      value: Use neutral fixtures. Never attach workflow tokens or private repository content.
+  - type: input
+    id: version
+    attributes:
+      label: Maintainer Contracts version
+      placeholder: 0.1.0
+    validations:
+      required: true
+  - type: input
+    id: environment
+    attributes:
+      label: Node.js, operating system, and GitHub event type
+    validations:
+      required: true
+  - type: textarea
+    id: policy
+    attributes:
+      label: Minimal redacted policy and context/event
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected result
+    validations:
+      required: true
+  - type: textarea
+    id: actual
+    attributes:
+      label: Actual result and findings
+    validations:
+      required: true
