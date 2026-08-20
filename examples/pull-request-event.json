@@ -1,0 +1,14 @@
+{
+  "number": 12,
+  "pull_request": {
+    "number": 12,
+    "title": "feat: add repository policy engine",
+    "body": "## Summary\nAdds configurable policy checks for maintainers.\n\n## Testing\n- [x] tests pass\n\n## AI assistance\nGenerated code was reviewed and tested by the maintainer.",
+    "labels": [],
+    "changed_files": 5,
+    "additions": 180,
+    "deletions": 20
+  },
+  "files": ["src/evaluate.mjs", "tests/contracts.test.mjs"],
+  "commits": ["feat: add repository policy engine"]
+}
