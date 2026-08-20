@@ -1,0 +1,36 @@
+name: Feature request
+description: Propose a generic maintainer-policy capability
+title: "[Feature]: "
+labels: [enhancement, triage]
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: Maintainer problem
+      description: Explain the review or repository-governance failure mode.
+    validations:
+      required: true
+  - type: textarea
+    id: contract
+    attributes:
+      label: Proposed contract and evidence
+    validations:
+      required: true
+  - type: textarea
+    id: security
+    attributes:
+      label: Security, bypass, and compatibility considerations
+    validations:
+      required: true
+  - type: dropdown
+    id: layer
+    attributes:
+      label: Affected layer
+      options:
+        - Markdown parser
+        - Policy evaluator
+        - GitHub metadata integration
+        - Reporter or action
+        - Documentation
+    validations:
+      required: true
