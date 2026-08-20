@@ -1,0 +1,47 @@
+{
+  "$schema": "../schemas/policy.schema.json",
+  "requiredSections": [
+    { "name": "Summary", "minLength": 20 },
+    { "name": "Security impact", "minLength": 4 },
+    { "name": "Testing", "minLength": 10 },
+    { "name": "Compatibility notes", "minLength": 4 },
+    { "name": "Public boundary", "minLength": 10 },
+    { "name": "AI assistance", "minLength": 4 }
+  ],
+  "forbiddenPlaceholders": [
+    "Describe the maintainer problem",
+    "Explain possible bypasses",
+    "Describe policy-schema",
+    "State the tools used"
+  ],
+  "requiredCheckedItems": ["npm run check", "npm pack --dry-run", "No credentials"],
+  "minimumCheckedItems": 4,
+  "titlePattern": {
+    "pattern": "^(feat|fix|docs|chore|refactor|test|ci)(\\([a-z0-9_.-]+\\))?: .+",
+    "message": "Use a conventional pull-request title."
+  },
+  "commitPattern": {
+    "pattern": "^(feat|fix|docs|chore|refactor|test|ci)(\\([a-z0-9_.-]+\\))?: .+",
+    "message": "Each commit subject must use the repository's conventional format."
+  },
+  "limits": {
+    "filesChanged": 80,
+    "changedLines": 2500
+  },
+  "pathRules": [
+    {
+      "id": "runtime-or-public-api",
+      "include": ["src/**", "bin/**", "action.yml", "schemas/**"],
+      "require": {
+        "requiredSections": ["Compatibility notes"]
+      }
+    },
+    {
+      "id": "workflow-or-token-boundary",
+      "include": ["src/github.mjs", "action.yml", ".github/workflows/**"],
+      "require": {
+        "requiredSections": ["Security impact", "Testing"]
+      }
+    }
+  ]
+}
