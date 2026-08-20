@@ -1,0 +1,28 @@
+{
+  "requiredSections": [
+    { "name": "Summary", "minLength": 20 },
+    { "name": "Testing", "minLength": 5 },
+    "AI assistance"
+  ],
+  "forbiddenPlaceholders": ["Describe what changed", "TODO"],
+  "requiredCheckedItems": ["tests pass"],
+  "minimumCheckedItems": 1,
+  "titlePattern": { "pattern": "^(feat|fix|docs|chore|refactor|test)(\\(.+\\))?: .+" },
+  "commitPattern": { "pattern": "^(feat|fix|docs|chore|refactor|test)(\\(.+\\))?: .+" },
+  "limits": { "filesChanged": 40, "changedLines": 1200 },
+  "pathRules": [
+    {
+      "id": "security-sensitive-change",
+      "include": ["src/security/**", "src/auth/**"],
+      "require": {
+        "requiredSections": ["Security impact", "Threat model"],
+        "requiredLabels": ["security-review"]
+      }
+    },
+    {
+      "id": "public-api-change",
+      "include": ["src/public/**", "include/**"],
+      "require": { "requiredSections": ["Compatibility notes"] }
+    }
+  ]
+}
