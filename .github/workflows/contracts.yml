@@ -1,0 +1,19 @@
+name: Pull request contract
+on:
+  pull_request:
+    types: [opened, edited, synchronize, reopened, labeled, unlabeled]
+permissions:
+  contents: read
+  pull-requests: read
+jobs:
+  contract:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out trusted base revision
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.base.sha }}
+      - name: Evaluate the repository contract
+        uses: ./
+        with:
+          policy: .github/maintainer-contracts.json
