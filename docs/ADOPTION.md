@@ -7,8 +7,8 @@ This document records only public, verifiable integrations. It deliberately sepa
 | Repository | Integration | Evidence | Relationship |
 |---|---|---|---|
 | `MasterRook1e/maintainer-contracts` | Evaluates pull-request bodies, changed files, labels, paths, and commit subjects using trusted base policy plus authenticated, paginated GitHub metadata | `.github/workflows/maintainer-contracts.yml`, `action.yml`, and `.github/maintainer-contracts.json` on `main` | Self-dogfooding |
-| `MasterRook1e/miniapp-packguard` | Enforces path-aware review evidence for public API, CI, action, and input-boundary changes | `.github/workflows/maintainer-contracts.yml` pins `c09ea3fa4b3b85a722639b9638e8dba14522f300` and supplies the read-only repository token | Same maintainer; cross-repository dogfooding |
-| `MasterRook1e/ue5-flick-physics` | Enforces review evidence for portable C++, reflected Unreal API, release, and public-boundary changes | `.github/workflows/maintainer-contracts.yml` pins `c09ea3fa4b3b85a722639b9638e8dba14522f300` and loads policy from the trusted base SHA | Same maintainer; cross-repository dogfooding |
+| `MasterRook1e/miniapp-packguard` | Enforces path-aware review evidence for public API, CI, action, and input-boundary changes | `.github/workflows/maintainer-contracts.yml` pins `602c3e16b8bbb81d69ee02d270a2d620b7216156` and supplies the read-only repository token | Same maintainer; cross-repository dogfooding |
+| `MasterRook1e/ue5-flick-physics` | Enforces review evidence for portable C++, reflected Unreal API, release, and public-boundary changes | `.github/workflows/maintainer-contracts.yml` pins `602c3e16b8bbb81d69ee02d270a2d620b7216156` and loads policy from the trusted base SHA | Same maintainer; cross-repository dogfooding |
 
 ## What is not claimed
 
