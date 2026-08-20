@@ -24,7 +24,7 @@
   },
   "scripts": {
     "lint": "node scripts/lint.mjs",
-    "test": "node --test tests/action-manifest.test.mjs tests/cli.test.mjs tests/event.test.mjs tests/github.test.mjs tests/markdown.test.mjs tests/policy.test.mjs tests/reporters.test.mjs",
+    "test": "node --test tests/action-manifest.test.mjs tests/cli.test.mjs tests/event.test.mjs tests/github.test.mjs tests/markdown.test.mjs tests/policy.test.mjs tests/reporters.test.mjs tests/self-config.test.mjs",
     "smoke": "node bin/maintainer-contracts.mjs check --event examples/event.json --files examples/files.json --commits examples/commits.json --config examples/maintainer-contracts.config.json --format console",
     "pack:check": "npm pack --dry-run --ignore-scripts",
     "verify": "npm run lint && npm test && npm run smoke && npm run pack:check && npm run pack:test",
