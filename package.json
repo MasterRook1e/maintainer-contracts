@@ -27,7 +27,8 @@
     "test": "node --test",
     "smoke": "node bin/maintainer-contracts.mjs check --event examples/event.json --files examples/files.json --commits examples/commits.json --config examples/maintainer-contracts.config.json --format console",
     "pack:check": "npm pack --dry-run --ignore-scripts",
-    "verify": "npm run lint && npm test && npm run smoke && npm run pack:check"
+    "pack:test": "node scripts/test-packed-package.mjs",
+    "verify": "npm run lint && npm test && npm run smoke && npm run pack:check && npm run pack:test"
   },
   "keywords": [
     "github-actions",
