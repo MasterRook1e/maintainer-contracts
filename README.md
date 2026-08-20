@@ -193,7 +193,7 @@ All currently recorded integrations are maintained by the same GitHub owner. The
 
 ## Status
 
-`0.1.1` adds authenticated, paginated GitHub evidence acquisition, fail-closed completeness checks, token-safe errors, and expanded tests. The package has not yet been published to npm.
+`0.1.2` fixes composite-action manifest loading, adds a regression test for top-level metadata expressions, and retains the authenticated, paginated, fail-closed evidence pipeline introduced in `0.1.1`. The package has not yet been published to npm.
 
 ## License
 

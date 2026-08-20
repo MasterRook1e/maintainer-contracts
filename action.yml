@@ -26,7 +26,7 @@ inputs:
     required: false
     default: "true"
   token:
-    description: Read-only GitHub token, normally ${{ github.token }} from the caller.
+    description: Read-only GitHub token supplied explicitly by the caller.
     required: false
     default: ""
   git-root:

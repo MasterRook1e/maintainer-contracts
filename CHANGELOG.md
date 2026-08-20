@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.1.2
+
+- fixed an invalid expression in composite-action input metadata that prevented GitHub from loading the action
+- added a regression test that rejects unsupported expression syntax in top-level action metadata
+- verified that API tokens are supplied explicitly by callers and only forwarded through the action environment
+
 ## 0.1.1
 
 - added authenticated GitHub API evidence acquisition for pull-request files and commits
