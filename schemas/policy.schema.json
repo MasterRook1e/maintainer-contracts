@@ -1,0 +1,43 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/MasterRook1e/maintainer-contracts/blob/main/schemas/policy.schema.json",
+  "title": "Maintainer Contracts policy",
+  "type": "object",
+  "additionalProperties": true,
+  "properties": {
+    "requiredSections": {
+      "type": "array",
+      "items": {
+        "oneOf": [
+          { "type": "string" },
+          {
+            "type": "object",
+            "required": ["name"],
+            "properties": {
+              "name": { "type": "string" },
+              "minLength": { "type": "integer", "minimum": 0 }
+            }
+          }
+        ]
+      }
+    },
+    "forbiddenPlaceholders": { "type": "array", "items": { "type": "string" } },
+    "requiredCheckedItems": { "type": "array", "items": { "type": "string" } },
+    "minimumCheckedItems": { "type": "integer", "minimum": 0 },
+    "requiredLabels": { "type": "array", "items": { "type": "string" } },
+    "limits": { "type": "object", "additionalProperties": { "type": "integer", "minimum": 0 } },
+    "pathRules": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["include", "require"],
+        "properties": {
+          "id": { "type": "string" },
+          "include": { "type": "array", "items": { "type": "string" } },
+          "exclude": { "type": "array", "items": { "type": "string" } },
+          "require": { "type": "object" }
+        }
+      }
+    }
+  }
+}
