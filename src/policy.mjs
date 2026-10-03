@@ -1,4 +1,5 @@
-import { compileGlobs, matchesAny } from "./glob.mjs";
+import { compileGlobs } from "./glob.mjs";
+import { matchingChangedPaths } from "./changed-files.mjs";
 import { parseMarkdown } from "./markdown.mjs";
 import { makeFinding, normalizeHeading, shouldFail } from "./util.mjs";
 import { REPORT_SCHEMA_VERSION, TOOL_NAME, TOOL_VERSION } from "./version.mjs";
@@ -121,11 +122,11 @@ function evaluatePathRules(markdown, input, config) {
   const triggered = [];
   for (const rule of config.pathRules) {
     const patterns = compileGlobs(rule.paths);
-    const matchingFiles = input.files.filter((file) => matchesAny(file.path, patterns));
-    if (!matchingFiles.length) continue;
-    triggered.push({ name: rule.name, paths: matchingFiles.map((file) => file.path) });
+    const matchingPaths = matchingChangedPaths(input.files, patterns);
+    if (!matchingPaths.length) continue;
+    triggered.push({ name: rule.name, paths: matchingPaths });
     findings.push(...sectionFindings(markdown, rule.requireSections.map((section) => ({ ...section, severity: section.severity || rule.severity })), "path-section"));
-    findings.push(...labelFindings(input.pullRequest.labels, rule.requireLabels, rule.requireAnyLabels, rule.severity, "path-rule", { rule: rule.name, matchingFiles: matchingFiles.map((file) => file.path) }));
+    findings.push(...labelFindings(input.pullRequest.labels, rule.requireLabels, rule.requireAnyLabels, rule.severity, "path-rule", { rule: rule.name, matchingFiles: matchingPaths }));
     findings.push(...checkedTextFindings(markdown, rule.requireCheckedTexts, rule.severity, rule.name));
     findings.push(...patternFindings(markdown, rule.requirePatterns.map((pattern) => ({ ...pattern, severity: pattern.severity || rule.severity })), "required", `path-rule-${rule.name}`));
   }
@@ -137,9 +138,9 @@ function evaluateLabelRules(input, config) {
   const triggered = [];
   for (const rule of config.labelRules) {
     const patterns = compileGlobs(rule.paths);
-    const matchingFiles = input.files.filter((file) => matchesAny(file.path, patterns));
-    if (!matchingFiles.length) continue;
-    triggered.push({ name: rule.name, paths: matchingFiles.map((file) => file.path) });
+    const matchingPaths = matchingChangedPaths(input.files, patterns);
+    if (!matchingPaths.length) continue;
+    triggered.push({ name: rule.name, paths: matchingPaths });
     findings.push(...labelFindings(input.pullRequest.labels, rule.requireLabels, rule.requireAnyLabels, rule.severity, "label-rule", { rule: rule.name }));
   }
   return { findings, triggered };

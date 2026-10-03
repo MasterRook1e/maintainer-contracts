@@ -1,5 +1,13 @@
 # Changelog
 
+## Unreleased
+
+- preserve previous filenames in GitHub, local Git, and explicit JSON rename evidence
+- evaluate path and label contracts against both sides of a rename without double-counting file statistics
+- parse NUL-delimited Git numstat records for Unicode, tab/newline filenames, binaries, and renames
+- resolve range refs to commit IDs and disable external diff/textconv helpers during local inspection
+- add negative, policy, fixture/API, and real-Git rename regression coverage; document report compatibility in `docs/RENAMED_FILES.md`
+
 ## 0.1.2
 
 - fixed an invalid expression in composite-action input metadata that prevented GitHub from loading the action

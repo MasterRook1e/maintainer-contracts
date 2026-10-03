@@ -2,7 +2,7 @@ import fs from "node:fs/promises";
 import path from "node:path";
 import { spawn } from "node:child_process";
 import { fetchPullRequestEvidence } from "./github.mjs";
-import { normalizeRelative } from "./util.mjs";
+import { normalizeChangedFile, parseNumstatZ } from "./changed-files.mjs";
 
 function run(command, args, options = {}) {
   return new Promise((resolve, reject) => {
@@ -42,44 +42,25 @@ export async function readJsonFile(filePath) {
   return JSON.parse(await fs.readFile(path.resolve(filePath), "utf8"));
 }
 
-function parseNumstat(text) {
-  const files = [];
-  for (const line of text.split(/\r?\n/)) {
-    if (!line) continue;
-    const [added, deleted, ...rest] = line.split("\t");
-    const filePath = rest.join("\t");
-    files.push({
-      path: normalizeRelative(filePath),
-      additions: added === "-" ? 0 : Number(added || 0),
-      deletions: deleted === "-" ? 0 : Number(deleted || 0),
-      binary: added === "-" || deleted === "-"
-    });
-  }
-  return files;
-}
-
 export async function inspectGitRange({ gitRoot, baseSha, headSha = "HEAD" }) {
   if (!baseSha) throw new Error("base SHA is required for Git range inspection");
   const root = path.resolve(gitRoot || process.cwd());
-  const numstat = await run("git", ["-C", root, "diff", "--numstat", `${baseSha}...${headSha}`]);
-  const log = await run("git", ["-C", root, "log", "--format=%H%x09%s", `${baseSha}..${headSha}`]);
-  const files = parseNumstat(numstat);
+  // Resolve refs before constructing ranges so caller input cannot become Git options.
+  const resolveCommit = async (ref) => {
+    const oid = (await run("git", ["-C", root, "rev-parse", "--verify", "--end-of-options", `${ref}^{commit}`])).trim();
+    if (!/^(?:[a-f0-9]{40}|[a-f0-9]{64})$/.test(oid)) throw new Error("Git ref did not resolve to one commit");
+    return oid;
+  };
+  const base = await resolveCommit(baseSha);
+  const head = await resolveCommit(headSha);
+  const numstat = await run("git", ["-C", root, "diff", "--no-ext-diff", "--no-textconv", "--numstat", "-z", "--find-renames", `${base}...${head}`, "--"]);
+  const log = await run("git", ["-C", root, "log", "--no-show-signature", "--format=%H%x09%s", `${base}..${head}`, "--"]);
+  const files = parseNumstatZ(numstat);
   const commits = log.split(/\r?\n/).filter(Boolean).map((line) => {
     const [sha, ...subject] = line.split("\t");
     return { sha, message: subject.join("\t") };
   });
   return { files, commits };
-}
-
-function normalizeFiles(files) {
-  return (files || []).map((file) => typeof file === "string"
-    ? { path: normalizeRelative(file), additions: 0, deletions: 0, binary: false }
-    : {
-        path: normalizeRelative(file.path || file.filename),
-        additions: Number(file.additions || 0),
-        deletions: Number(file.deletions || 0),
-        binary: Boolean(file.binary)
-      });
 }
 
 function normalizeCommits(commits) {
@@ -121,7 +102,7 @@ export async function loadInputs(options) {
     evidenceSource = evidenceSource === "explicit" ? "explicit+git" : "git";
   }
 
-  files = normalizeFiles(files);
+  files = (files || []).map(normalizeChangedFile);
   commits = normalizeCommits(commits);
 
   if (options.githubApi && pullRequest.changedFiles > 0 && files.length !== pullRequest.changedFiles) {

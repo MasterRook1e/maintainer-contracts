@@ -1,3 +1,5 @@
+import { normalizeChangedFile } from "./changed-files.mjs";
+
 const REPOSITORY = /^[A-Za-z0-9_.-]+\/[A-Za-z0-9_.-]+$/;
 const API_PROTOCOLS = new Set(["https:", "http:"]);
 
@@ -125,12 +127,7 @@ export async function fetchPullRequestEvidence({
   const files = fileEntries.map((entry, index) => {
     const filePath = String(entry?.filename || "");
     if (!filePath) throw new Error(`GitHub file evidence at index ${index} has no filename`);
-    return {
-      path: filePath,
-      additions: Number(entry.additions || 0),
-      deletions: Number(entry.deletions || 0),
-      binary: false
-    };
+    return normalizeChangedFile({ ...entry, path: filePath, binary: false });
   });
 
   const commits = commitEntries.map((entry, index) => {
